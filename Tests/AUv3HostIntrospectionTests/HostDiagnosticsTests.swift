@@ -2,11 +2,22 @@ import XCTest
 @testable import AUv3HostIntrospection
 
 final class HostDiagnosticsTests: XCTestCase {
+    /// Decoder that mirrors the library's `.iso8601` date encoding so the wire
+    /// frame round-trips. The wire format carries `capturedAt` as an ISO8601
+    /// string (whole-second precision).
+    private func decoder() -> JSONDecoder {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return decoder
+    }
+
     /// The whole envelope round-trips through JSON unchanged — it is the wire
     /// contract for the diagnostics stream and the os_log dump, so encode/decode
-    /// must be lossless.
+    /// must be lossless. `capturedAt` is pinned to a whole second because the
+    /// ISO8601 wire format does not carry sub-second precision.
     func testEnvelopeRoundTrips() throws {
         var snapshot = HostDiagnostics(source: "unit-test")
+        snapshot.capturedAt = Date(timeIntervalSince1970: 1_700_000_000)
         snapshot.transport.available = true
         snapshot.transport.moving = true
         snapshot.transport.samplePosition = 44_100
@@ -19,7 +30,7 @@ final class HostDiagnosticsTests: XCTestCase {
         snapshot.environment.thermalState = "nominal"
 
         let data = try XCTUnwrap(snapshot.jsonData())
-        let decoded = try JSONDecoder().decode(HostDiagnostics.self, from: data)
+        let decoded = try decoder().decode(HostDiagnostics.self, from: data)
 
         XCTAssertEqual(decoded, snapshot)
     }
@@ -30,7 +41,7 @@ final class HostDiagnosticsTests: XCTestCase {
         let json = HostDiagnostics(source: "pretty").prettyJSON()
         XCTAssertTrue(json.contains("\"source\" : \"pretty\""))
         XCTAssertFalse(json.contains("\\/"), "slashes should not be escaped")
-        let decoded = try JSONDecoder().decode(HostDiagnostics.self, from: Data(json.utf8))
+        let decoded = try decoder().decode(HostDiagnostics.self, from: Data(json.utf8))
         XCTAssertEqual(decoded.source, "pretty")
     }
 
