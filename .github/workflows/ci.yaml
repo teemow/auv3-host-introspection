@@ -11,14 +11,24 @@ permissions:
 
 jobs:
   test:
-    name: Build & test (macOS)
+    name: Build & test (iOS Simulator)
     runs-on: macos-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build
-        run: swift build
+      - name: Resolve scheme & simulator
+        run: |
+          set -eo pipefail
+          xcodebuild -list
+          SCHEME=$(xcodebuild -list -json | python3 -c "import sys,json; d=json.load(sys.stdin); print((d.get('workspace') or d.get('project') or {}).get('schemes',['AUv3HostIntrospection'])[0])")
+          DEVICE=$(xcrun simctl list devices available --json | python3 -c "import sys,json; d=json.load(sys.stdin)['devices']; n=[x['name'] for r in d for x in d[r] if x.get('isAvailable') and x['name'].startswith('iPhone')]; print(n[-1] if n else 'iPhone 16')")
+          echo "SCHEME=$SCHEME" >> "$GITHUB_ENV"
+          echo "SIM_DEVICE=$DEVICE" >> "$GITHUB_ENV"
+          echo "Using scheme=$SCHEME device=$DEVICE"
 
-      - name: Test
-        run: swift test
+      - name: Build & test
+        run: |
+          xcodebuild test \
+            -scheme "$SCHEME" \
+            -destination "platform=iOS Simulator,name=$SIM_DEVICE"

@@ -10,7 +10,7 @@ import PackageDescription
 // Apple platforms only (it reads AVFoundation / AudioToolbox / CoreMIDI).
 let package = Package(
     name: "auv3-host-introspection",
-    platforms: [.iOS(.v16), .macOS(.v13)],
+    platforms: [.iOS(.v16)],
     products: [
         .library(name: "AUv3HostIntrospection", targets: ["AUv3HostIntrospection"]),
     ],

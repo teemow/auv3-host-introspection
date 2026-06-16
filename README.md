@@ -5,9 +5,9 @@ environment while it's hosted (in AUM, AudioBus, Logic, GarageBand, …)? This
 library answers that with a single `Codable` snapshot, `HostDiagnostics`,
 assembled from everything reachable from inside the appex sandbox.
 
-Factored out of [auv3-probe](https://github.com/teemow/auv3-probe). Apple
-platforms only — iOS 16+ / macOS 13+ (it reads `AVFoundation` / `AudioToolbox` /
-`CoreMIDI`).
+Factored out of [auv3-probe](https://github.com/teemow/auv3-probe). iOS 16+ only
+(it reads `AVFoundation`/`AVAudioSession` / `AudioToolbox` / `CoreMIDI`, which are
+iOS-flavored).
 
 ## Install
 
